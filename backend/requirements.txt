@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pandas
+numpy
+nltk
+fasttext
+scikit-learn
+transformers
+dialogtag
+regex
+python-multipart

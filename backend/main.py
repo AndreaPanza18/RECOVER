@@ -1,26 +1,45 @@
 from fastapi import FastAPI, UploadFile, File
-from app.model_logic import pipeline
-import shutil
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from app import model_logic
+import tempfile
 import os
+import shutil
 
 app = FastAPI()
 
-@app.get("/")
-def read_root():
-    return {"message": "RECOVER backend attivo!"}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/extract")
 async def extract_functional_requirements(file: UploadFile = File(...)):
-    # Salva il file ricevuto temporaneamente
-    temp_path = f"backend/temp_{file.filename}"
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-
     try:
-        results = pipeline(temp_path)
-    except Exception as e:
-        return {"error": str(e)}
-    finally:
-        os.remove(temp_path)
+        # Crea un file temporaneo nella directory di sistema
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            temp_path = tmp.name
 
-    return {"functional_requirements": results}
+        # Chiama la pipeline col path
+        results = model_logic.pipeline(temp_path)
+
+        return JSONResponse(content={"requirements": results})
+
+
+    except Exception as e :
+
+        import traceback
+
+        traceback.print_exc()  # Stampa l'errore nel terminale
+
+        return JSONResponse(content={"error" : str(e)}, status_code=500)
+
+
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)

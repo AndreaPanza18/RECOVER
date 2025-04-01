@@ -9,3 +9,4 @@ transformers
 dialogtag
 regex
 python-multipart
+tf-keras

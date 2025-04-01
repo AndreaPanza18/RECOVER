@@ -19,6 +19,9 @@ COPY requirements.txt .
 # Installa le dipendenze Python
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Installa le dipendenze di TensorFlow (solo la prima volta)
+RUN python -c "from transformers import TFAutoModelForSequenceClassification; TFAutoModelForSequenceClassification.from_pretrained('bert-base-uncased')"
+
 # Copia tutto il resto del codice (solo se è cambiato)
 COPY . .
 

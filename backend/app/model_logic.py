@@ -12,62 +12,68 @@ from nltk import tokenize, Tree
 
 
 import nltk
+# Check if NLTK punkt tokenizer is available, if not download it
 try:
+    print("Looking for NLTK punkt tokenizer...")
     nltk.data.find('tokenizers/punkt')
 except LookupError:
+    print("Downloading NLTK punkt tokenizer...")
     nltk.download('punkt', quiet=True)
 
+# Load the models
 ft_model = fasttext.load_model("models/fasttext_model.bin")
+
+# Load the dialog tagger
+dialog_tagger = DialogTag('bert-base-uncased')
+
 with open('models/model.pkl', 'rb') as f:
     model = pickle.load(f)
 
+def preprocessing(path):
+    def read_txt(path):
+        # Read the file
+        with open(path, "r+") as conversation:
+            conversation = conversation.readlines()
+            ## Initial pre-processing
+            # Remove empty entries
+            conversation = [entry for entry in conversation if entry != '\n']
+            return conversation
+
+
+    def read_csv(path):
+        raise NotImplementedError("CSV file reading not implemented yet")
+
+    def read_xlsx(path):
+        raise NotImplementedError("XLSX file reading not implemented yet")
+
+    if path.endswith(".txt"):
+        conversation = read_txt(path)
+    elif path.endswith(".xlsx"):
+        conversation = read_xlsx(path)
+    elif path.endswith(".csv"):
+        conversation = read_csv(path)
+    else:
+        raise ValueError(f"Unsupported file type: {path}")
+
+    # Create speakerturns
+    pattern = r"(?P<end_time>\[\d+\:\d+\:\d+\]) (?P<speaker>\w+)\: (?P<content>.+)"
+    speakerturns = [re.match(pattern, entry) for entry in conversation]
+
+    # Remove all empty speakerturns
+    speakerturns = [turn for turn in speakerturns if turn != None]
+
+    # Change format so each speakerturn has a unique identifier
+    for i in range(0, len(speakerturns)):
+        current = speakerturns[i]
+        speakerturns[i] = (i, current.group('end_time'), current.group('speaker'), current.group('content'))
+
+    df = pd.DataFrame(speakerturns,
+                      columns=['identifier', 'time', 'speaker', 'text']
+                      ).set_index('identifier', drop=False)
+    return df
+
 def pipeline(path):
-    def preprocessing(path):
-        def read_txt(path):
-            # Read the file
-            with open(path, "r+") as conversation:
-                conversation = conversation.readlines()
-                ## Initial pre-processing
-                # Remove empty entries
-                conversation = [entry for entry in conversation if entry != '\n']
-                return conversation
-
-
-        def read_csv(path):
-            raise NotImplementedError("CSV file reading not implemented yet")
-
-        def read_xlsx(path):
-            raise NotImplementedError("XLSX file reading not implemented yet")
-
-        if path.endswith(".txt"):
-            conversation = read_txt(path)
-        elif path.endswith(".xlsx"):
-            conversation = read_xlsx(path)
-        elif path.endswith(".csv"):
-            conversation = read_csv(path)
-        else:
-            raise ValueError(f"Unsupported file type: {path}")
-
-        # Create speakerturns
-        pattern = r"(?P<end_time>\[\d+\:\d+\:\d+\]) (?P<speaker>\w+)\: (?P<content>.+)"
-        speakerturns = [re.match(pattern, entry) for entry in conversation]
-
-        # Remove all empty speakerturns
-        speakerturns = [turn for turn in speakerturns if turn != None]
-
-        # Change format so each speakerturn has a unique identifier
-        for i in range(0, len(speakerturns)):
-            current = speakerturns[i]
-            speakerturns[i] = (i, current.group('end_time'), current.group('speaker'), current.group('content'))
-
-        df = pd.DataFrame(speakerturns,
-                          columns=['identifier', 'time', 'speaker', 'text']
-                          ).set_index('identifier', drop=False)
-        return df
-
     conversation = preprocessing(path)
-    # Speech Act Classification Model
-    dialog_tagger = DialogTag('bert-base-uncased')
 
     # Whenever a dialogue acts contains "-Question" or is an "Or-Clause", we consider it to be a question.
     dialog_acts = ["-Question", "Or-Clause"]
@@ -102,30 +108,3 @@ def pipeline(path):
                 final_predicted_rqs.append(output[i]["text"])
 
     return final_predicted_rqs
-
-
-def load_model():
-    """
-    Load or initialize the machine learning model.
-    Returns:
-        model (any): An instance of your model, e.g. a scikit-learn or PyTorch object.
-    """
-    # TODO: Replace with actual loading logic
-    # Example:
-    # model = joblib.load("path_to_saved_model.joblib")
-    # return model
-    return "fake_model"
-
-def run_inference(model, data):
-    """
-    Run inference on the given data using the provided model.
-    Args:
-        model (any): The ML model instance.
-        data (str or other): Input data to be processed by the model.
-    Returns:
-        result (any): The model's output or prediction.
-    """
-    # TODO: Replace with your real inference logic
-    # Example:
-    # return model.predict([data])[0]
-    return f"Inference result for input: '{data}'"

@@ -10,3 +10,4 @@ dialogtag
 regex
 python-multipart
 tf-keras
+llama-cpp-python

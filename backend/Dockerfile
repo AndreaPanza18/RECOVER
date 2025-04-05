@@ -1,9 +1,6 @@
-FROM python:3.11-slim
+FROM python:3.10-slim
 
-# Imposta directory di lavoro
-WORKDIR /app
-
-# Installa dipendenze di sistema (prima, perché raramente cambiano)
+# 1️⃣ Installa pacchetti di sistema minimi necessari
 RUN apt-get update && apt-get install -y \
     build-essential \
     libglib2.0-0 \
@@ -11,25 +8,28 @@ RUN apt-get update && apt-get install -y \
     libxext6 \
     libxrender-dev \
     curl \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
-# Copia solo requirements per sfruttare la cache
+# 2️⃣ Imposta la working directory
+WORKDIR /app
+
+# 3️⃣ Copia solo i file di dipendenze per sfruttare il caching
 COPY requirements.txt .
 
-# Installa le dipendenze Python
-RUN pip install --no-cache-dir -r requirements.txt
+# 4️⃣ Installa prima llama-cpp-python per LLM locale
+RUN pip install --upgrade pip && \
+    pip install llama-cpp-python && \
+    pip install --no-cache-dir -r requirements.txt
 
-# Installa le dipendenze di TensorFlow (solo la prima volta)
-RUN python -c "from transformers import TFAutoModelForSequenceClassification; TFAutoModelForSequenceClassification.from_pretrained('bert-base-uncased')"
-
-# Copia tutto il resto del codice (solo se è cambiato)
+# 5️⃣ Copia il resto del backend (codice + modelli)
 COPY . .
 
-# Scarica risorse nltk (solo la prima volta)
+# 6️⃣ (opzionale) Scarica risorse NLTK se le usi
 RUN python -m nltk.downloader punkt
 
-# Espone la porta dell'app
+# 7️⃣ Espone la porta FastAPI
 EXPOSE 8000
 
-# Comando di avvio
+# 8️⃣ Avvia l'app FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

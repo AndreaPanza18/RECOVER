@@ -1,14 +1,12 @@
 import { useState } from 'react'
+import FileDropZone from "./components/FileDropZone.jsx";
 
 function App() {
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [results, setResults] = useState([])
 
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0])
-    setResults([]) // Reset risultati se cambi file
-  }
+
 
   const handleExtract = async () => {
     if (!file) return
@@ -39,12 +37,16 @@ function App() {
       <div className="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow">
         <h1 className="text-2xl font-bold mb-4">Estrai requisiti da file .txt</h1>
 
-        <input
-          type="file"
-          accept=".txt"
-          onChange={handleFileChange}
-          className="mb-4"
+        <FileDropZone
+          onFileUpload={(file) => {
+            setFile(file)
+            setResults([])
+          }}
+          file={file}
         />
+
+
+
 
         <button
           className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

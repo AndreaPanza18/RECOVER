@@ -57,16 +57,25 @@ function App() {
         </button>
 
         <div className="mt-6">
-          <h2 className="text-xl font-semibold mb-2">Requisiti estratti:</h2>
-          {results.length > 0 ? (
-            <ul className="list-disc list-inside space-y-1">
-              {results.map((r, idx) => (
-                <li key={idx}>{r}</li>
-              ))}
-            </ul>
-          ) : (
-            <p className="text-gray-500">Nessun requisito ancora estratto.</p>
-          )}
+          <ul className="space-y-4">
+            {results.map((r, idx) => (
+                <li key={idx}>
+                  <p className="font-semibold text-gray-700">📌 Frase origine:</p>
+                  <p className="mb-2 italic text-gray-600">{r.sentence}</p>
+
+                  {r.requirements.length > 0 ? (
+                      <ul className="list-disc list-inside ml-4 text-black">
+                        {r.requirements.map((req, ridx) => (
+                            <li key={ridx}>{req}</li>
+                        ))}
+                      </ul>
+                  ) : (
+                      <p className="text-gray-400 ml-4">Nessun requisito identificato</p>
+                  )}
+                </li>
+            ))}
+          </ul>
+
         </div>
       </div>
     </div>

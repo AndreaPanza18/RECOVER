@@ -8,8 +8,6 @@ services:
     container_name: recover-backend
     ports:
       - "8000:8000"
-    volumes:
-      - ./backend:/app
     restart: unless-stopped
 
   frontend:

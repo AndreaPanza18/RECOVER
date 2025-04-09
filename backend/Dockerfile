@@ -1,8 +1,8 @@
 FROM python:3.10-slim
 
-# 1️⃣ Installa pacchetti di sistema minimi necessari
 RUN apt-get update && apt-get install -y \
     build-essential \
+    wget \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
@@ -11,25 +11,26 @@ RUN apt-get update && apt-get install -y \
     git \
     && rm -rf /var/lib/apt/lists/*
 
-# 2️⃣ Imposta la working directory
 WORKDIR /app
 
-# 3️⃣ Copia solo i file di dipendenze per sfruttare il caching
+
+COPY . .
+RUN echo ls && ls models/
+
+RUN echo "✅ Scarico il modello..." && \
+    wget -O models/llama-2-7b-chat.Q4_K_M.gguf \
+    https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf && \
+    echo "✅ Contenuto di models/ dopo il download:" && \
+    ls -lh models/
+
 COPY requirements.txt .
 
-# 4️⃣ Installa prima llama-cpp-python per LLM locale
 RUN pip install --upgrade pip && \
     pip install llama-cpp-python && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install -r requirements.txt
 
-# 5️⃣ Copia il resto del backend (codice + modelli)
-COPY . .
-
-# 6️⃣ (opzionale) Scarica risorse NLTK se le usi
 RUN python -m nltk.downloader punkt
-
-# 7️⃣ Espone la porta FastAPI
+RUN ls -lh models/
 EXPOSE 8000
 
-# 8️⃣ Avvia l'app FastAPI
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

@@ -43,3 +43,24 @@ async def extract_functional_requirements(file: UploadFile = File(...)):
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+@app.post("/userstory")
+async def generate_user_stories(file: UploadFile = File(...)):
+    try:
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
+            shutil.copyfileobj(file.file, tmp)
+            temp_path = tmp.name
+
+        # Pipeline dedicata
+        results = model_logic.generate_userstories(temp_path)
+
+        return JSONResponse(content={"userstories": results})
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return JSONResponse(content={"error": str(e)}, status_code=500)
+
+    finally:
+        if os.path.exists(temp_path):
+            os.remove(temp_path)

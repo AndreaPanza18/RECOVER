@@ -74,3 +74,13 @@ main {
 .result-item .userstory {
   margin-top: .5rem;
 }
+
+.action-btn.secondary {
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+}
+.action-btn.secondary:hover {
+  background-color: var(--color-accent);
+  color: white;
+}

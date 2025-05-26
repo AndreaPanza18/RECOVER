@@ -1,65 +1,37 @@
-import React, { useState } from 'react';
+import React, { useRef } from 'react';
 import './FileDropZone.css';
 
-const FileDropZone = ({ onFileUpload, file }) => {
-  const [isDragging, setIsDragging] = useState(false);
+export default function FileDropZone({ file, onFileUpload }) {
+  const fileInputRef = useRef(null);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (file) onFileUpload(file)
-  }
-
-  const handleDragEnter = (e) => {
-    e.preventDefault();
-    setIsDragging(true);
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDragLeave = () => {
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragging(false);
-    console.log("file in dropzone:", file)
-
-    const files = e.dataTransfer.files;
-    if (files.length > 0) {
-      onFileUpload(files[0])
-    }
+  const triggerFileSelect = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   return (
-    <div
-      className={`file-drop-zone ${isDragging ? 'dragging' : ''}`}
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      <p>Trascina un file qui oppure</p>
+    <div className="file-input-zone">
+      <p>Trascina un file o usa il pulsante qui sotto</p>
+
+      <button className="fake-upload-btn" onClick={triggerFileSelect}>
+        📁 Seleziona file
+      </button>
 
       <input
         type="file"
         accept=".txt"
+        ref={fileInputRef}
         onChange={(e) => {
-          handleFileChange(e)
-          e.target.value = null
+          if (e.target.files[0]) onFileUpload(e.target.files[0]);
+          e.target.value = null;
         }}
-        className="mb-4"
+        className="hidden-file-input"
       />
 
-      {file && file.name && (
-      <p className="text-sm text-green-400 mt-2">
-        Hai selezionato: <strong>{file.name}</strong>
-      </p>
+      {file && (
+        <p className="selected">
+          Hai selezionato: <strong>{file.name}</strong>
+        </p>
       )}
     </div>
   );
-};
-
-export default FileDropZone;
+}

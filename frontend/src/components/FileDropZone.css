@@ -1,11 +1,30 @@
-.file-drop-zone {
-  border: 2px dashed #ccc;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: border-color 0.3s;
+.file-input-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
-.file-drop-zone.dragging {
-  border-color: #007bff;
+.fake-upload-btn {
+  background-color: var(--color-primary);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.fake-upload-btn:hover {
+  background-color: var(--color-accent);
+}
+
+.hidden-file-input {
+  display: none;
+}
+
+.selected {
+  font-size: 0.9rem;
+  color: var(--color-primary);
 }

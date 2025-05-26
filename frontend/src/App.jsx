@@ -1,85 +1,99 @@
-import { useState } from 'react'
-import FileDropZone from "./components/FileDropZone.jsx";
+import { useState, useCallback } from 'react';
+import './App.css';
+import NavBar from './components/NavBar.jsx';
+import FileDropZone from './components/FileDropZone.jsx';
+import { Loader2, Upload } from 'lucide-react';
 
 function App() {
-  const [file, setFile] = useState(null)
-  const [loading, setLoading] = useState(false)
-  const [results, setResults] = useState([])
+  const [activeTool, setActiveTool] = useState('extract'); // or 'userstory'
+  const [file, setFile] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState([]);
 
+  // Handle drop anywhere
+  const onDrop = useCallback(e => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files[0]) setFile(files[0]);
+  }, [setFile]);
 
+  const onDragOver = e => e.preventDefault();
 
-  const handleExtract = async () => {
-    if (!file) return
+  const handleAction = async () => {
+    if (!file) return;
+    setLoading(true);
+    const formData = new FormData();
+    formData.append('file', file);
 
-    setLoading(true)
-
-    const formData = new FormData()
-    formData.append('file', file)
+    const endpoint = activeTool === 'extract'
+      ? '/extract'
+      : '/userstory'; // cambia path per userstory
 
     try {
-      const response = await fetch('http://localhost:8000/extract', {
+      const res = await fetch(`http://localhost:8000${endpoint}`, {
         method: 'POST',
         body: formData,
-      })
-
-      const data = await response.json()
-      setResults(data.requirements || [])
-    } catch (err) {
-      console.error('Errore durante la chiamata:', err)
-      setResults(['Errore nella richiesta.'])
+      });
+      const data = await res.json();
+      setResults(data[ activeTool === 'extract' ? 'requirements' : 'userstories' ] || []);
+    } catch {
+      setResults([ 'Errore nella richiesta.' ]);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <div className="max-w-2xl mx-auto bg-white p-6 rounded-2xl shadow">
-        <h1 className="text-2xl font-bold mb-4">Estrai requisiti da file .txt</h1>
+    <div
+      className="app-container"
+      onDrop={onDrop}
+      onDragOver={onDragOver}
+    >
+      <header>
+        <h1>RECOVER</h1>
+      </header>
 
-        <FileDropZone
-          onFileUpload={(file) => {
-            setFile(file)
-            setResults([])
-          }}
-          file={file}
-        />
+      <NavBar active={activeTool} onChange={setActiveTool} />
 
+      <main>
+        <div className="card">
+          <FileDropZone file={file} onFileUpload={setFile} />
+          <button
+            onClick={handleAction}
+            disabled={!file || loading}
+            className="action-btn"
+          >
+            {loading
+              ? <><Loader2 className="animate-spin"/> Elaborazione…</>
+              : <><Upload/> { activeTool === 'extract' ? 'Estrai requisiti' : 'Crea userstory' }</>
+            }
+          </button>
 
-
-
-        <button
-          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          onClick={handleExtract}
-          disabled={loading || !file}
-        >
-          {loading ? 'Estrazione in corso...' : 'Estrai requisiti'}
-        </button>
-
-        <div className="mt-6">
-          <ul className="space-y-4">
-            {results.map((r, idx) => (
-                <li key={idx}>
-                  <p className="font-semibold text-gray-700">📌 Frase origine:</p>
-                  <p className="mb-2 italic text-gray-600">{r.sentence}</p>
-
-                  {r.requirements.length > 0 ? (
-                      <ul className="list-disc list-inside ml-4 text-black">
-                        {r.requirements.map((req, ridx) => (
-                            <li key={ridx}>{req}</li>
-                        ))}
-                      </ul>
-                  ) : (
-                      <p className="text-gray-400 ml-4">Nessun requisito identificato</p>
-                  )}
-                </li>
+          <div className="results">
+            {results.map((r,i) => (
+              <div key={i} className="result-item">
+                { activeTool === 'extract'
+                  ? <>
+                      <p className="label">📌 Frase origine:</p>
+                      <p className="sentence">{r.sentence}</p>
+                      {r.requirements?.length
+                        ? <ul>{r.requirements.map((x,j)=><li key={j}>{x}</li>)}</ul>
+                        : <p className="none">Nessun requisito</p>
+                      }
+                    </>
+                  : <>
+                      <p className="label">📌 Requisito:</p>
+                      <p className="sentence">{r.requirement}</p>
+                      <p className="userstory">📝 {r.userstory}</p>
+                    </>
+                }
+              </div>
             ))}
-          </ul>
-
+          </div>
         </div>
-      </div>
+      </main>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;

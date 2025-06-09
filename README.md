@@ -1,58 +1,92 @@
-# RECOVER - Guida all'Installazione
+# 🚀 RECOVER - Automatic Functional Requirement Extraction
 
-**RECOVER** è uno strumento per l'estrazione automatica di requisiti funzionali da conversazioni testuali. Questa guida ti aiuterà a installarlo e avviarlo correttamente.
-
----
-
-## ✨ Requisiti
-
-- [Docker](https://www.docker.com/)
-- [Docker Compose](https://docs.docker.com/compose/)
-- [Git LFS](https://git-lfs.github.com/)
-
-> ⚠️ Assicurati di aver eseguito `git lfs install` **prima** del clone, per scaricare i modelli correttamente.
+**RECOVER** is a tool for automatically extracting functional requirements from textual conversations and converting them into user stories. It provides a modern web interface and a FastAPI backend powered by LLMs.
 
 ---
 
-## 📂 Clona e avvia il progetto
+## ✨ Requirements
+
+* [Docker](https://www.docker.com/)
+* [Docker Compose](https://docs.docker.com/compose/)
+* [Git LFS](https://git-lfs.github.com/)
+
+> ⚠️ Make sure to run `git lfs install` **before** cloning the project, to ensure large model files are fetched correctly.
+
+---
+
+## 📅 Clone and Start the Project
 
 ```bash
-# Clona il repository (Git LFS attivo)
-git clone https://github.com/tuo-utente/RECOVER.git
+# Clone the repository (with Git LFS enabled)
+git clone https://github.com/your-username/RECOVER.git
 cd RECOVER
 
-# Installa Git LFS se non l'hai ancora fatto (solo una volta)
+# One-time Git LFS setup (if not already done)
 git lfs install
 
-# Scarica i file gestiti da LFS (modelli)
+# Download LFS-tracked model files
 git lfs pull
-
-# Avvia tutto con Docker Compose
-docker-compose up --build
-```
-
-Accedi all'app React su:
-```
-http://localhost:3000
-```
-
-Il backend FastAPI risponde su:
-```
-http://localhost:8000
 ```
 
 ---
 
-## 💾 Modelli NLP
+## 💾 NLP Models
 
-I modelli vengono salvati in `backend/models/` e sono tracciati con **Git LFS**.
+Models are located in `backend/models/` and are tracked via **Git LFS**:
 
-- `fasttext_model.bin`
-- `model.pkl`
+* `fasttext_model.bin`
+* `model.pkl`
 
-> Se il clone fallisce per file >100MB, assicurati di avere Git LFS attivo:
+> 🧠 If the clone fails for files >100MB, ensure Git LFS is correctly configured:
+>
 > ```bash
 > git lfs install
 > git lfs pull
 > ```
 
+> If you have some problems with LFS, you can manually download the models and put them in backend/models/.
+---
+
+## 🔐 Hugging Face Access Token (Required)
+
+To use the LLaMA 2 model from Hugging Face, you must generate a **free access token**.
+
+### 📌 Steps to create and use the token
+
+1. Go to [https://huggingface.co](https://huggingface.co) and sign in (or register).
+2. Navigate to your token settings:
+   👉 [https://huggingface.co/settings/tokens](https://huggingface.co/settings/tokens)
+3. Click **“New token”**, give it a name (e.g. `recover-access`), and choose **“Read”** permissions.
+4. Copy the generated token.
+
+### 🧪 Store the token in a `.env` file inside the `RECOVER/backend` directory
+
+```env
+HF_TOKEN=hf_XXXXXXXXXXXXXXXXXXXXXXXX
+```
+
+---
+
+## 🚀 Run the Project with the Token
+
+Once the `.env` file is in place, simply run:
+
+```bash
+docker-compose up --build
+```
+
+The token will be passed into the container environment and used to authenticate with Hugging Face APIs when downloading the LLaMA model.
+
+---
+
+Access the frontend (React app) at:
+
+```
+http://localhost:3000
+```
+
+The backend API (FastAPI) is available at:
+
+```
+http://localhost:8000
+```

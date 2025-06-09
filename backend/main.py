@@ -46,19 +46,17 @@ async def extract_functional_requirements(file: UploadFile = File(...)):
 
 @app.post("/userstory")
 async def generate_user_stories(file: UploadFile = File(...)):
+    print("Received file for user story generation")
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
             shutil.copyfileobj(file.file, tmp)
             temp_path = tmp.name
 
-        # Pipeline dedicata
-        results = model_logic.generate_userstories(temp_path)
-
-        return JSONResponse(content={"userstories": results})
+        stories = model_logic.generate_userstories(temp_path)
+        return JSONResponse(content={"userstories": stories})
 
     except Exception as e:
-        import traceback
-        traceback.print_exc()
+        import traceback; traceback.print_exc()
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
     finally:

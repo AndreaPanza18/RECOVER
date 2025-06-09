@@ -11,6 +11,8 @@ import nltk
 from dialog_tag import DialogTag
 from nltk import tokenize, Tree
 from llama_cpp import Llama
+from pathlib import Path
+
 
 _llm = None
 
@@ -135,7 +137,7 @@ def requirements_extraction(final_predicted_rqs):
                 "Please do not consider the example excerpts provided in the examples in your final answer. "
                 "---- Example 1: ---- "
                 "Example excerpt: 'Excerpt of conversation containing system requirements' "
-                "Example output: '1. The system must have example feature X; 2. The system must have example feature Y;' "
+                "Example output: 'The system must have example feature X;The system must have example feature Y;' "
                 "---- Example 2: ---- "
                 "Example excerpt: 'Excerpt of conversation that does not contain system requirements' "
                 "Example output: 'None'"
@@ -187,3 +189,76 @@ def pipeline(path):
     predicted_requirements_phrases = questions_identification(conversation)
     return requirements_extraction(predicted_requirements_phrases)
 
+# ---------------------------------------------------------------
+# 1.1  Parser del file .txt “Frase origine …   - 1. requisito …”
+# ---------------------------------------------------------------
+import re
+from pathlib import Path          # assicurati che l'import sia presente
+
+#   - inizio riga, spazi opzionali
+#   - trattino
+#   - spazi
+#   - numero + punto (facoltativo)   es. “1.”
+#   - spazi
+#   - requisito (catturato nel gruppo 1)
+REQ_LINE = re.compile(r"^\s*-\s*(?:\d+\.\s*)?(.*)$")
+
+def parse_requirements_txt(path: str) -> list[str]:
+    """
+    Estrae SOLO i requisiti dalle righe con bullet (- 1. …).
+    Ignora “Frase origine:” e righe vuote.
+    """
+    requirements: list[str] = []
+
+    # puoi usare anche open(path, ... ) se preferisci
+    with Path(path).open(encoding="utf-8") as f:
+        for raw in f:
+            match = REQ_LINE.match(raw.rstrip())
+            if match:
+                req_text = match.group(1).strip()
+                if req_text:                 # scarta righe vuote
+                    requirements.append(req_text)
+
+    return requirements
+
+
+
+# ---------------------------------------------------------------
+# 1.2  Generazione user story via LLM (output = pipeline-style)
+# ---------------------------------------------------------------
+def generate_userstories(requirements_file_path: str) -> list[dict]:
+    """
+    :returns:
+      [
+        { "requirement": "<req>", "userstory": "<story>" },
+        ...
+      ]
+    """
+    llm   = get_llm()
+    reqs  = parse_requirements_txt(requirements_file_path)
+    out   = []
+
+    prompt_tpl = (
+        "You are an expert Business Analyst. Convert the following **system "
+        "requirement** into ONE agile user story in the format:\n"
+        "As a <type of user>, I want <some goal> so that <some reason>.\n\n"
+        "Requirement: \"{req}\"\n\n"
+        "User story:"
+    )
+
+    for req in reqs:
+        try:
+            res = llm(
+                prompt_tpl.format(req=req),
+                max_tokens=128,
+                temperature=0.2,
+                stop=["</s>"]
+            )
+            story = res["choices"][0]["text"].strip()
+        except Exception as e:
+            print("LLM error:", e)
+            story = ""
+
+        out.append({"requirement": req, "userstory": story})
+
+    return out

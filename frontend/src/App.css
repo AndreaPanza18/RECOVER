@@ -59,6 +59,7 @@ main {
   padding: 1rem;
   border-radius: .5rem;
   border: 1px solid #e0e0e0;
+  color: #1a1a1a;
 }
 .result-item .label {
   font-weight: 600;

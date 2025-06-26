@@ -1,37 +1,34 @@
-FROM python:3.10-slim
-
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    python3-dev \
-    cmake \
-    libopenblas-dev \
-    libomp-dev \
-    wget \
-    curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
-
-
+# ---- base image -------------------------------------------------
+FROM python:3.10-slim AS base
 WORKDIR /app
 
+ENV PYTHONUNBUFFERED=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=on \
+    PIP_NO_CACHE_DIR=off
 
-COPY . .
-RUN echo ls && ls models/
+# ---- system dependencies (C++ compilers, cmake, etc.) -----------
 
-RUN echo "✅ Scarico il modello..." && \
-    wget -O models/llama-2-7b-chat.Q4_K_M.gguf \
-    https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf && \
-    echo "✅ Contenuto di models/ dopo il download:" && \
-    ls -lh models/
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    gcc \
+    g++ \
+    cmake \
+    git \
+    libgomp1 \
+    curl \
+ && rm -rf /var/lib/apt/lists/*
 
+# ---- Python dependencies ----------------------------------------
 COPY requirements.txt .
-
-RUN pip install --upgrade pip && \
-    pip install llama-cpp-python && \
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --upgrade pip && \
     pip install -r requirements.txt
 
-RUN python -m nltk.downloader punkt
-RUN ls -lh models/
-EXPOSE 8000
+# ---- Application files ------------------------------------------
+COPY . .
 
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# ---- Download model script must be executable -------------------
+RUN chmod +x download_model.sh
+
+# ---- Entrypoint -------------------------------------------------
+CMD ["bash", "./download_model.sh"]

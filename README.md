@@ -44,10 +44,24 @@ Models are located in `backend/models/` and are tracked via **Git LFS**:
 > git lfs pull
 > ```
 
-> If you have some problems with LFS, you can manually download the models and put them in backend/models/.
----
+> If you have issues with LFS or want to use a custom model (e.g., LLaMA 2), you can **manually download the model file** by defining a `.env` variable.
 
-## 🔐 Hugging Face Access Token (Required)
+### 📥 Manual Model Download (Optional)
+
+You can define a `.env` file in the `backend/` directory to specify a custom LLM model URL:
+
+```env
+# backend/.env
+LLM_MODEL_URL= https://huggingface.co/TheBloke/Llama-2-7B-Chat-GGUF/resolve/main/llama-2-7b-chat.Q4_K_M.gguf
+```
+
+Then run this command from the root of the project (or from within your Python venv):
+
+```bash
+python -c "import os, urllib.request; from dotenv import load_dotenv; load_dotenv(dotenv_path='backend/.env'); url=os.getenv('LLM_MODEL_URL'); p='backend/models/llama-2-7b-chat.Q4_K_M.gguf'; os.makedirs(os.path.dirname(p), exist_ok=True); urllib.request.urlretrieve(url, p) if url and not os.path.exists(p) else print('Model already exists or URL is missing')"
+```
+
+This ensures the model is locally available in `backend/models/` before building the Docker image, avoiding download during build time.## 🔐 Hugging Face Access Token (Required)
 
 To use the LLaMA 2 model from Hugging Face, you must generate a **free access token**.
 

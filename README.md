@@ -17,7 +17,7 @@
 ## 📅 Clone and Start the Project
 
 ```bash
-git clone https://github.com/your-username/RECOVER.git
+git clone https://github.com/gianwario/RECOVER.git
 cd RECOVER
 git lfs install
 git lfs pull

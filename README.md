@@ -17,14 +17,9 @@
 ## 📅 Clone and Start the Project
 
 ```bash
-# Clone the repository (with Git LFS enabled)
 git clone https://github.com/your-username/RECOVER.git
 cd RECOVER
-
-# One-time Git LFS setup (if not already done)
 git lfs install
-
-# Download LFS-tracked model files
 git lfs pull
 ```
 

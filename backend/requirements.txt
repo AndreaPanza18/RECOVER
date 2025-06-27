@@ -11,3 +11,6 @@ regex
 python-multipart
 tf-keras
 llama-cpp-python
+dotenv
+requests
+google-generativeai

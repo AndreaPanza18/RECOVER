@@ -1,13 +1,10 @@
-from fastapi import FastAPI, UploadFile, File
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app import model_logic
-import tempfile
-import os
-import shutil
+import tempfile, shutil
 
 app = FastAPI()
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -17,48 +14,27 @@ app.add_middleware(
 )
 
 @app.post("/extract")
-async def extract_functional_requirements(file: UploadFile = File(...)):
-    try:
-        # Crea un file temporaneo nella directory di sistema
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
-            shutil.copyfileobj(file.file, tmp)
-            temp_path = tmp.name
+async def extract_functional_requirements(
+    file: UploadFile = File(...),
+    provider: str = Form(...)
+):
+    # Salva file temporaneo
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        temp_path = tmp.name
 
-        # Chiama la pipeline col path
-        results = model_logic.pipeline(temp_path)
-
-        return JSONResponse(content={"requirements": results})
-
-
-    except Exception as e :
-
-        import traceback
-
-        traceback.print_exc()  # Stampa l'errore nel terminale
-
-        return JSONResponse(content={"error" : str(e)}, status_code=500)
-
-
-
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+    results = model_logic.pipeline(temp_path, provider)
+    return JSONResponse(content={"requirements": results})
 
 @app.post("/userstory")
-async def generate_user_stories(file: UploadFile = File(...)):
-    print("Received file for user story generation")
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
-            shutil.copyfileobj(file.file, tmp)
-            temp_path = tmp.name
+async def generate_user_stories(
+    file: UploadFile = File(...),
+    provider: str = Form(...)
+):
+    # Salva file temporaneo
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".txt") as tmp:
+        shutil.copyfileobj(file.file, tmp)
+        temp_path = tmp.name
 
-        stories = model_logic.generate_userstories(temp_path)
-        return JSONResponse(content={"userstories": stories})
-
-    except Exception as e:
-        import traceback; traceback.print_exc()
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-    finally:
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+    stories = model_logic.generate_userstories(temp_path, provider)
+    return JSONResponse(content={"userstories": stories})

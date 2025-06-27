@@ -1,26 +1,56 @@
-"""
-ML logic module: load, preprocess, and run inference with your model.
-"""
 import pickle
+import os
 import fasttext
 import pandas as pd
 import nltk
+import re
 from dialog_tag import DialogTag
 from llama_cpp import Llama
+import google.generativeai as genai
 
+# Carica .env solo per API_KEY e MODEL_NAME
+from dotenv import load_dotenv
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
+# Globals per caching
 _llm = None
+_current_provider = None
 
-def get_llm():
-    global _llm
+# Configura le tue variabili (API_KEY, MODEL_NAME) in .env
+genai.configure(api_key=os.getenv("GENAI_API_KEY"))
+def get_llm(provider: str):
+    global _llm, _current_provider
+    # Se cambia provider, resetta LLM
+    if provider != _current_provider:
+        _current_provider = provider
+        _llm = None
+
     if _llm is None:
-        print("⚡ Loading LLaMA model for the first time...")
-        _llm = Llama(
-            model_path="models/llama-2-7b-chat.Q4_K_M.gguf",
-            n_ctx=2048,
-            n_threads=4
-        )
+        if provider == "genai":
+            model_name = os.getenv("GENAI_MODEL", "models/gemini-1.5-flash-latest")
+            model = genai.GenerativeModel(model_name)
+            def genai_llm(prompt, **kwargs):
+                resp = model.generate_content(
+                    prompt,
+                    generation_config={
+                        "temperature": kwargs.get("temperature", 0.2),
+                        "max_output_tokens": kwargs.get("max_tokens", 512)
+                    }
+                )
+                return {"choices": [{"text": resp.text.strip()}]}
+            _llm = genai_llm
+        else:
+            model_path = os.path.join(
+                "models",
+                os.getenv("LLM_MODEL_FILE", "llama-2-7b-chat.Q4_K_M.gguf")
+            )
+            _llm = Llama(
+                model_path=model_path,
+                n_ctx=2048,
+                n_threads=4
+            )
     return _llm
+
 
 
 #Constants
@@ -120,8 +150,8 @@ def questions_identification(conversation):
 
     return final_predicted_rqs
 
-def requirements_extraction(final_predicted_rqs):
-    llm = get_llm()
+def requirements_extraction(final_predicted_rqs, provider):
+    llm = get_llm(provider)
     prompts = []
     for sentence in final_predicted_rqs:
         prompts.append({
@@ -150,6 +180,8 @@ def requirements_extraction(final_predicted_rqs):
                 stop=["</s>"]
             )
             result_text = response["choices"][0]["text"].strip()
+            print("▶︎ Prompt:", prompt["prompt"])
+            print("▶︎ Response text:", result_text)
 
             output.append({
                 "sentence": prompt["sentence"],
@@ -176,13 +208,12 @@ def requirements_extraction(final_predicted_rqs):
             "sentence": row["sentence"],
             "requirements": requirements
         })
-
     return final_requirements_mapping
 
-def pipeline(path):
+def pipeline(path, provider):
     conversation = preprocessing(path)
     predicted_requirements_phrases = questions_identification(conversation)
-    return requirements_extraction(predicted_requirements_phrases)
+    return requirements_extraction(predicted_requirements_phrases, provider)
 
 # ---------------------------------------------------------------
 # 1.1  Parser del file .txt “Frase origine …   - 1. requisito …”
@@ -221,7 +252,7 @@ def parse_requirements_txt(path: str) -> list[str]:
 # ---------------------------------------------------------------
 # 1.2  Generazione user story via LLM (output = pipeline-style)
 # ---------------------------------------------------------------
-def generate_userstories(requirements_file_path: str) -> list[dict]:
+def generate_userstories(requirements_file_path: str, provider) -> list[dict]:
     """
     :returns:
       [
@@ -229,7 +260,7 @@ def generate_userstories(requirements_file_path: str) -> list[dict]:
         ...
       ]
     """
-    llm   = get_llm()
+    llm   = get_llm(provider)
     reqs  = parse_requirements_txt(requirements_file_path)
     out   = []
 

@@ -85,3 +85,32 @@ main {
   background-color: var(--color-accent);
   color: white;
 }
+
+.provider-switch {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.provider-switch button {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
+  background-color: transparent;
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.provider-switch button.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.provider-switch button:hover {
+  background-color: var(--color-accent);
+  color: white;
+}
+

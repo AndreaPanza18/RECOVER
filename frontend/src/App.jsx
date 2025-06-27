@@ -9,6 +9,8 @@ function App() {
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState([]);
+  const [provider, setProvider] = useState('llama')
+
 
   // ──────────────────────────────────────────────────────────────
   // TAB SWITCH
@@ -37,6 +39,7 @@ function App() {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('provider', provider)
     const endpoint = activeTool === 'extract' ? '/extract' : '/userstory';
 
     try {
@@ -44,7 +47,11 @@ function App() {
         method: 'POST',
         body: formData,
       });
+      // 👇 AGGIUNGI QUESTO
+      console.log("📦 Risposta grezza:", res);
+
       const data = await res.json();
+      console.log("✅ Dati JSON:", data);
       setResults(
         data[activeTool === 'extract' ? 'requirements' : 'userstories'] || []
       );
@@ -100,76 +107,91 @@ function App() {
   // RENDER
   // ──────────────────────────────────────────────────────────────
   return (
-    <div className="app-container" onDrop={onDrop} onDragOver={onDragOver}>
-      <header>
-        <h1>RECOVER</h1>
-      </header>
+      <div className="app-container" onDrop={onDrop} onDragOver={onDragOver}>
+        <header>
+          <h1>RECOVER</h1>
+        </header>
 
-      <NavBar active={activeTool} onChange={handleTabChange} />
-
-      <main>
-        <div className="card">
-          <FileDropZone
-            file={file}
-            onFileUpload={(f) => {
-              setFile(f);
-              setResults([]);
-            }}
-          />
-
+        <NavBar active={activeTool} onChange={handleTabChange}/>
+        <div className="provider-switch">
           <button
-            className="action-btn"
-            onClick={handleAction}
-            disabled={!file || loading}
+              className={provider === 'llama' ? 'active' : ''}
+              onClick={() => setProvider('llama')}
           >
-            {loading ? (
-              <>
-                <Loader2 className="animate-spin" /> Elaborazione…
-              </>
-            ) : (
-              <>
-                <Upload /> {activeTool === 'extract' ? 'Estrai requisiti' : 'Crea userstory'}
-              </>
-            )}
+            LLaMA
           </button>
-
-          {results.length > 0 && (
-            <button className="action-btn secondary" onClick={downloadResults}>
-              📄 Scarica {activeTool === 'extract' ? 'requisiti' : 'userstory'}
-            </button>
-          )}
-
-          {/* RISULTATI VISIVI */}
-          <div className="results">
-            {activeTool === 'extract' &&
-              results.map((r, i) => (
-                <div key={i} className="result-item">
-                  <p className="label">📌 Original sentence:</p>
-                  <p className="sentence">{r.sentence}</p>
-                  {r.requirements?.length ? (
-                    <ul>
-                      {r.requirements.map((req, j) => (
-                        <li key={j}>{req}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="none">Nessun requisito</p>
-                  )}
-                </div>
-              ))}
-
-            {activeTool === 'userstory' &&
-              results.map((r, i) => (
-                <div key={i} className="result-item">
-                  <p className="label">📌 Requirement:</p>
-                  <p className="sentence">{r.requirement}</p>
-                  <p className="userstory">📝 {r.userstory}</p>
-                </div>
-              ))}
-          </div>
+          <button
+              className={provider === 'genai' ? 'active' : ''}
+              onClick={() => setProvider('genai')}
+          >
+            Gemini
+          </button>
         </div>
-      </main>
-    </div>
+
+
+        <main>
+          <div className="card">
+            <FileDropZone
+                file={file}
+                onFileUpload={(f) => {
+                  setFile(f);
+                  setResults([]);
+                }}
+            />
+
+            <button
+                className="action-btn"
+                onClick={handleAction}
+                disabled={!file || loading}
+            >
+              {loading ? (
+                  <>
+                    <Loader2 className="animate-spin"/> Elaborazione…
+                  </>
+              ) : (
+                  <>
+                    <Upload/> {activeTool === 'extract' ? 'Estrai requisiti' : 'Crea userstory'}
+                  </>
+              )}
+            </button>
+
+            {results.length > 0 && (
+                <button className="action-btn secondary" onClick={downloadResults}>
+                  📄 Scarica {activeTool === 'extract' ? 'requisiti' : 'userstory'}
+                </button>
+            )}
+
+            {/* RISULTATI VISIVI */}
+            <div className="results">
+              {activeTool === 'extract' &&
+                  results.map((r, i) => (
+                      <div key={i} className="result-item">
+                        <p className="label">📌 Original sentence:</p>
+                        <p className="sentence">{r.sentence}</p>
+                        {r.requirements?.length ? (
+                            <ul>
+                              {r.requirements.map((req, j) => (
+                                  <li key={j}>{req}</li>
+                              ))}
+                            </ul>
+                        ) : (
+                            <p className="none">Nessun requisito</p>
+                        )}
+                      </div>
+                  ))}
+
+              {activeTool === 'userstory' &&
+                  results.map((r, i) => (
+                      <div key={i} className="result-item">
+                        <p className="label">📌 Requirement:</p>
+                        <p className="sentence">{r.requirement}</p>
+                        <p className="userstory">📝 {r.userstory}</p>
+                      </div>
+                  ))}
+            </div>
+          </div>
+        </main>
+      </div>
   );
 }
 

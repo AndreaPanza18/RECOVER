@@ -227,25 +227,22 @@ from pathlib import Path          # assicurati che l'import sia presente
 #   - numero + punto (facoltativo)   es. “1.”
 #   - spazi
 #   - requisito (catturato nel gruppo 1)
-REQ_LINE = re.compile(r"^\s*-\s*(?:\d+\.\s*)?(.*)$")
+REQ_LINE = re.compile(r"^\s*-\s+(.*?);?\s*$")
 
 def parse_requirements_txt(path: str) -> list[str]:
-    """
-    Estrae SOLO i requisiti dalle righe con bullet (- 1. …).
-    Ignora “Frase origine:” e righe vuote.
-    """
     requirements: list[str] = []
 
-    # puoi usare anche open(path, ... ) se preferisci
     with Path(path).open(encoding="utf-8") as f:
         for raw in f:
             match = REQ_LINE.match(raw.rstrip())
             if match:
                 req_text = match.group(1).strip()
-                if req_text:                 # scarta righe vuote
-                    requirements.append(req_text)
+                if req_text:
+                    split_reqs = [r.strip() for r in req_text.split(';') if r.strip()]
+                    requirements.extend(split_reqs)
 
     return requirements
+
 
 
 

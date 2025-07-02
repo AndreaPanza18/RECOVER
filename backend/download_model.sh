@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -e
+set -u
 
 MODEL_DIR="/app/models"
 MODEL_FILE="llama-2-7b-chat.Q4_K_M.gguf"

@@ -5,12 +5,13 @@ numpy
 nltk
 fasttext
 scikit-learn
-transformers
+transformers==4.36.2
 dialogtag
 regex
 python-multipart
-tf-keras
+tensorflow-cpu==2.15.0
 llama-cpp-python
-dotenv
+python-dotenv
 requests
 google-generativeai
+openai>=1.0.0

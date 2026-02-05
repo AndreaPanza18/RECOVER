@@ -126,8 +126,13 @@ function App() {
           >
             Gemini
           </button>
+          <button
+              className={provider === 'chatgpt' ? 'active' : ''}
+              onClick={() => setProvider('chatgpt')}
+          >
+            Chat GPT
+          </button>
         </div>
-
 
         <main>
           <div className="card">

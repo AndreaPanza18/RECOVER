@@ -5,7 +5,7 @@ services:
     env_file:
       - ./backend/.env           # dove metti HF_TOKEN e LLM_MODEL_URL
     volumes:
-      - llama_models:/app/models # modello persistente
+      - ./backend/models:/app/models
     ports:
       - "8000:8000"
 

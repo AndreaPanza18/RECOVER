@@ -6,14 +6,25 @@ You are an expert in software requirements engineering.
 Classify the following requirement as either FUNC or NONFUNC.
 Respond ONLY with FUNC or NONFUNC, nothing else.
 
-FUNC: Functional requirements define specific, testable behaviors and functions of the system.
-NONFUNC: Non-functional requirements define constraints, quality attributes, or system properties (e.g., performance, reliability, usability).
+If the requirement describes WHAT the system does → FUNC.
+If it describes HOW WELL / constraints / qualities → NONFUNC.
+Performance, security, reliability, scalability → NONFUNC.
 
 Examples:
+
 Requirement: "The system must allow users to reset their password."
 Response: FUNC
 
-Requirement: "The system must respond to any request within 2 seconds."
+Requirement: "The system must store transaction history."
+Response: FUNC
+
+Requirement: "The system must respond within 2 seconds."
+Response: NONFUNC
+
+Requirement: "The system must encrypt user data."
+Response: NONFUNC
+
+Requirement: "The system must support 10,000 concurrent users."
 Response: NONFUNC
 
 Requirement:

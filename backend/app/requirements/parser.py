@@ -6,12 +6,6 @@ REQ_LINE = re.compile(r"^\s*-\s+(.*?);?\s*$")
 
 
 def parse_requirements_txt(path: str) -> List[str]:
-    """
-    Legge un file txt contenente requisiti di sistema e restituisce
-    una lista di requisiti singoli (split su ';').
-
-    Ogni riga deve iniziare con '- ' seguito dal requisito.
-    """
     requirements: List[str] = []
 
     path_obj = Path(path)

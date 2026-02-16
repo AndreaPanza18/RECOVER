@@ -1,12 +1,11 @@
 from app.nlp.models_loader import ft_model, dialog_tagger, model
+from nltk.tokenize import PunktSentenceTokenizer
 
 def questions_identification(conversation):
 
-    # Dialog acts considerati question
     dialog_acts = ["-Question", "Or-Clause"]
 
     def is_question(s: str) -> bool:
-        from nltk.tokenize import PunktSentenceTokenizer
         tokenizer = PunktSentenceTokenizer()
         q = False
         for sentence in tokenizer.tokenize(s):

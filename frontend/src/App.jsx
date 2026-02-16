@@ -1,203 +1,203 @@
 import { useState, useCallback } from 'react'
 import './App.css'
-import NavBar from './components/NavBar.jsx';
-import FileDropZone from './components/FileDropZone.jsx';
-import { Loader2, Upload } from 'lucide-react';
+import NavBar from './components/NavBar.jsx'
+import FileDropZone from './components/FileDropZone.jsx'
+import { Loader2, Upload } from 'lucide-react'
 
 function App() {
-  const [activeTool, setActiveTool] = useState('extract');
-  const [file, setFile] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [results, setResults] = useState([]);
+  const [activeTool, setActiveTool] = useState('extract')
+  const [file, setFile] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [rawText, setRawText] = useState('')
+  const [results, setResults] = useState(null)
   const [provider, setProvider] = useState('llama')
 
-
-  // ──────────────────────────────────────────────────────────────
-  // TAB SWITCH
-  // ──────────────────────────────────────────────────────────────
+  // ─────────────────────────────────────────────
   const handleTabChange = (tool) => {
-    setActiveTool(tool);
-    setResults([]); // clear previous results when switching tab
-  };
+    setActiveTool(tool)
+    setResults(null)
+    setRawText('')
+    setFile(null)
+  }
 
-  // ──────────────────────────────────────────────────────────────
-  // GLOBAL DRAG & DROP
-  // ──────────────────────────────────────────────────────────────
   const onDrop = useCallback((e) => {
-    e.preventDefault();
-    const files = e.dataTransfer.files;
-    if (files[0]) setFile(files[0]);
-  }, []);
-  const onDragOver = (e) => e.preventDefault();
+    e.preventDefault()
+    const files = e.dataTransfer.files
+    if (files[0]) handleFileUpload(files[0])
+  }, [])
 
-  // ──────────────────────────────────────────────────────────────
-  // BACKEND CALL
-  // ──────────────────────────────────────────────────────────────
+  const onDragOver = (e) => e.preventDefault()
+
+  const handleFileUpload = (f) => {
+    setFile(f)
+    setResults(null)
+    const reader = new FileReader()
+    reader.onload = (e) => setRawText(e.target.result)
+    reader.readAsText(f)
+  }
+
   const handleAction = async () => {
-    if (!file) return;
-    setLoading(true);
+    if (!file) return
+    setLoading(true)
 
-    const formData = new FormData();
-    formData.append('file', file);
+    const formData = new FormData()
+    formData.append('file', file)
     formData.append('provider', provider)
-    const endpoint = activeTool === 'extract' ? '/extract' : '/userstory';
+
+    const endpoint = activeTool === 'extract' ? '/extract' : '/userstory'
 
     try {
       const res = await fetch(`http://localhost:8000${endpoint}`, {
         method: 'POST',
         body: formData,
-      });
-      // 👇 AGGIUNGI QUESTO
-      console.log("📦 Risposta grezza:", res);
+      })
+      const data = await res.json()
 
-      const data = await res.json();
-      console.log("✅ Dati JSON:", data);
-      setResults(
-        data[activeTool === 'extract' ? 'requirements' : 'userstories'] || []
-      );
+      if (activeTool === 'extract') {
+        setResults({
+          functional: data.functional || [],
+          non_functional: data.non_functional || [],
+        })
+      } else {
+        setResults(data.userstories || [])
+      }
     } catch (err) {
-      console.error(err);
-      setResults(['Errore durante la richiesta.']);
+      console.error(err)
+      alert('Errore backend')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
-  // ──────────────────────────────────────────────────────────────
-  // DOWNLOAD TXT
-  // ──────────────────────────────────────────────────────────────
   const downloadResults = () => {
-    if (!results.length) return;
-
-    let lines = [];
+    if (!results) return
+    let lines = []
 
     if (activeTool === 'extract') {
-      // Prendiamo solo le frasi che hanno almeno un requisito
-      const relevant = results.filter(
-        (r) => r.requirements && r.requirements.length
-      );
-      if (!relevant.length) return; // niente da scaricare
-
-      relevant.forEach((r) => {
-        lines.push(`Original statement: ${r.sentence}`);
-        r.requirements.forEach((req) => lines.push(`  - ${req}`));
-        lines.push('');
-      });
+      const { functional, non_functional } = results
+      lines.push('=== FUNCTIONAL REQUIREMENTS ===\n')
+      functional?.forEach((r) => {
+        lines.push(`Sentence: ${r.sentence}`)
+        r.requirements.forEach((req) => lines.push(` - ${req}`))
+        lines.push('')
+      })
+      lines.push('\n=== NON FUNCTIONAL REQUIREMENTS ===\n')
+      non_functional?.forEach((r) => {
+        lines.push(`Sentence: ${r.sentence}`)
+        r.requirements.forEach((req) => lines.push(` - ${req}`))
+        lines.push('')
+      })
     } else {
-      // userstory – manteniamo tutti
       results.forEach((r) => {
-        lines.push(`Requirement: ${r.requirement}`);
-        lines.push(`User story: ${r.userstory}`);
-        lines.push('');
-      });
+        lines.push(`Requirement: ${r.requirement}`)
+        lines.push(`User story: ${r.userstory}`)
+        lines.push('')
+      })
     }
 
-    if (!lines.length) return;
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = activeTool === 'extract' ? 'requirements.txt' : 'userstories.txt'
+    a.click()
+    URL.revokeObjectURL(url)
+  }
 
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = activeTool === 'extract' ? 'requisiti.txt' : 'userstories.txt';
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  // ──────────────────────────────────────────────────────────────
-  // RENDER
-  // ──────────────────────────────────────────────────────────────
   return (
-      <div className="app-container" onDrop={onDrop} onDragOver={onDragOver}>
-        <header>
-          <h1>RECOVER</h1>
-        </header>
+    <div className="app-container" onDrop={onDrop} onDragOver={onDragOver}>
+      <header>
+        <h1>RECOVER</h1>
+      </header>
 
-        <NavBar active={activeTool} onChange={handleTabChange}/>
-        <div className="provider-switch">
-          <button
-              className={provider === 'llama' ? 'active' : ''}
-              onClick={() => setProvider('llama')}
-          >
-            LLaMA
-          </button>
-          <button
-              className={provider === 'genai' ? 'active' : ''}
-              onClick={() => setProvider('genai')}
-          >
-            Gemini
-          </button>
-          <button
-              className={provider === 'chatgpt' ? 'active' : ''}
-              onClick={() => setProvider('chatgpt')}
-          >
-            Chat GPT
-          </button>
-        </div>
+      <NavBar active={activeTool} onChange={handleTabChange} />
 
-        <main>
-          <div className="card">
-            <FileDropZone
-                file={file}
-                onFileUpload={(f) => {
-                  setFile(f);
-                  setResults([]);
-                }}
-            />
+      {/* PROVIDER SWITCH */}
+      <div className="provider-switch">
+        <button
+          className={provider === 'llama' ? 'active' : ''}
+          onClick={() => setProvider('llama')}
+        >LLaMA</button>
+        <button
+          className={provider === 'genai' ? 'active' : ''}
+          onClick={() => setProvider('genai')}
+        >Gemini</button>
+        <button
+          className={provider === 'chatgpt' ? 'active' : ''}
+          onClick={() => setProvider('chatgpt')}
+        >ChatGPT</button>
+      </div>
 
-            <button
-                className="action-btn"
-                onClick={handleAction}
-                disabled={!file || loading}
-            >
-              {loading ? (
-                  <>
-                    <Loader2 className="animate-spin"/> Elaborazione…
-                  </>
-              ) : (
-                  <>
-                    <Upload/> {activeTool === 'extract' ? 'Estrai requisiti' : 'Crea userstory'}
-                  </>
-              )}
+      <main>
+        <div className="card">
+          <FileDropZone
+            file={file}
+            onFileUpload={handleFileUpload}
+          />
+
+          {rawText && (
+            <div className="file-preview">
+              <h4>📄 Preview del file</h4>
+              <div className="preview-box">{rawText}</div>
+            </div>
+          )}
+
+          <button
+            className="action-btn"
+            onClick={handleAction}
+            disabled={!file || loading}
+          >
+            {loading ? <><Loader2 className="animate-spin" /> Elaborazione…</>
+                     : <><Upload /> {activeTool === 'extract' ? 'Estrai requisiti' : 'Crea userstory'}</>}
+          </button>
+
+          {results && (
+            <button className="action-btn secondary" onClick={downloadResults}>
+              📄 Scarica risultati
             </button>
+          )}
 
-            {results.length > 0 && (
-                <button className="action-btn secondary" onClick={downloadResults}>
-                  📄 Scarica {activeTool === 'extract' ? 'requisiti' : 'userstory'}
-                </button>
+          {/* RESULTS */}
+          <div className="results">
+
+            {activeTool === 'extract' && results && (
+              <div className="columns">
+
+                <div className="column func">
+                  <h3>🧩 Functional</h3>
+                  {results.functional?.length ? results.functional.map((r,i) => (
+                    <div key={i} className="result-item">
+                      <p className="sentence">{r.sentence}</p>
+                      <ul>{r.requirements.map((req,j) => <li key={j}>{req}</li>)}</ul>
+                    </div>
+                  )) : <p className="none">Nessun requisito</p>}
+                </div>
+
+                <div className="column nonfunc">
+                  <h3>⚙️ Non Functional</h3>
+                  {results.non_functional?.length ? results.non_functional.map((r,i) => (
+                    <div key={i} className="result-item">
+                      <p className="sentence">{r.sentence}</p>
+                      <ul>{r.requirements.map((req,j) => <li key={j}>{req}</li>)}</ul>
+                    </div>
+                  )) : <p className="none">Nessun requisito</p>}
+                </div>
+
+              </div>
             )}
 
-            {/* RISULTATI VISIVI */}
-            <div className="results">
-              {activeTool === 'extract' &&
-                  results.map((r, i) => (
-                      <div key={i} className="result-item">
-                        <p className="label">📌 Original sentence:</p>
-                        <p className="sentence">{r.sentence}</p>
-                        {r.requirements?.length ? (
-                            <ul>
-                              {r.requirements.map((req, j) => (
-                                  <li key={j}>{req}</li>
-                              ))}
-                            </ul>
-                        ) : (
-                            <p className="none">Nessun requisito</p>
-                        )}
-                      </div>
-                  ))}
+            {activeTool === 'userstory' && results?.length && results.map((r,i) => (
+              <div key={i} className="result-item">
+                <p className="sentence">{r.requirement}</p>
+                <p className="userstory">📝 {r.userstory}</p>
+              </div>
+            ))}
 
-              {activeTool === 'userstory' &&
-                  results.map((r, i) => (
-                      <div key={i} className="result-item">
-                        <p className="label">📌 Requirement:</p>
-                        <p className="sentence">{r.requirement}</p>
-                        <p className="userstory">📝 {r.userstory}</p>
-                      </div>
-                  ))}
-            </div>
           </div>
-        </main>
-      </div>
-  );
+        </div>
+      </main>
+    </div>
+  )
 }
 
-export default App;
+export default App

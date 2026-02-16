@@ -26,7 +26,7 @@ main {
   border-radius: 1rem;
   box-shadow: 0 4px 16px rgba(0,0,0,0.1);
   width: 100%;
-  max-width: 28rem;
+  max-width: 60rem;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
@@ -48,34 +48,6 @@ main {
   opacity: .6;
   cursor: not-allowed;
 }
-
-.results {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-.result-item {
-  background: #f9f9f9;
-  padding: 1rem;
-  border-radius: .5rem;
-  border: 1px solid #e0e0e0;
-  color: #1a1a1a;
-}
-.result-item .label {
-  font-weight: 600;
-  margin-bottom: .25rem;
-}
-.result-item .sentence {
-  font-style: italic;
-  margin-bottom: .5rem;
-}
-.result-item .none {
-  color: #888;
-}
-.result-item .userstory {
-  margin-top: .5rem;
-}
-
 .action-btn.secondary {
   background-color: transparent;
   border: 2px solid var(--color-primary);
@@ -92,7 +64,6 @@ main {
   gap: 1rem;
   margin-top: 1rem;
 }
-
 .provider-switch button {
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
@@ -103,14 +74,59 @@ main {
   color: var(--color-primary);
   transition: background-color 0.2s ease, color 0.2s ease;
 }
-
 .provider-switch button.active {
   background-color: var(--color-primary);
   color: white;
 }
-
 .provider-switch button:hover {
   background-color: var(--color-accent);
   color: white;
 }
 
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.columns {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.column {
+  flex: 1;
+  min-width: 250px;
+}
+.column h3 {
+  text-align: center;
+  margin-bottom: .5rem;
+  color: var(--color-accent);
+}
+.result-item {
+  background: #f9f9f9;
+  padding: 1rem;
+  border-radius: .5rem;
+  border: 1px solid #e0e0e0;
+  color: #1a1a1a;
+}
+.result-item .sentence {
+  font-style: italic;
+  margin-bottom: .5rem;
+}
+.result-item .none {
+  color: #888;
+}
+.result-item .userstory {
+  margin-top: .5rem;
+}
+.file-preview {
+  max-height: 150px;
+  overflow-y: scroll;
+  padding: 0.75rem;
+  background: #222;
+  border-radius: .5rem;
+  color: #fff;
+}
+.file-preview h4 {
+  margin: 0 0 .5rem 0;
+}

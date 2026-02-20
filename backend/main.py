@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app import model_logic
 from app.requirements import userstories
 import tempfile, shutil
+import verify_models
 
 app = FastAPI()
 app.add_middleware(

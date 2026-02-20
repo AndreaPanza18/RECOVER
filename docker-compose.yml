@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
     env_file:
-      - ./backend/.env           # dove metti HF_TOKEN e LLM_MODEL_URL
+      - ./backend/.env
     volumes:
       - ./backend/models:/app/models
     ports:
@@ -18,10 +18,8 @@ services:
     image: recover_frontend:latest
     ports:
       - "80:80"
-    # in dev, per cache di npm
     volumes:
       - node_modules:/app/node_modules
 
 volumes:
-  llama_models:
   node_modules:

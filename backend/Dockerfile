@@ -27,8 +27,6 @@ RUN --mount=type=cache,target=/root/.cache/pip \
 # ---- Application files ------------------------------------------
 COPY . .
 
-# ---- Download model script must be executable -------------------
-RUN chmod +x download_model.sh
-
 # ---- Entrypoint -------------------------------------------------
-CMD ["bash", "./download_model.sh"]
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["bash", "./entrypoint.sh"]

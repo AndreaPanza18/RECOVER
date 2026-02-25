@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import './App.css'
 import FileDropZone from './components/FileDropZone.jsx'
-import Terminal from './components/Terminal.jsx'
 import { Loader2, Upload } from 'lucide-react'
 
 function App() {

@@ -23,9 +23,9 @@ cd RECOVER
 
 ## 📃 Create an .env file
 
-Go in RECOVER/backend and create a simple .txt  
+Go in RECOVER/backend/ and create a .env  
 In this file you have to insert your personal Chat GPT and Gemini API keys.  
-Here yuo can create your personal keys:
+Here you can create your personal keys:
 - [Chat GPT](https://platform.openai.com/api-keys)
 - [Gemini](https://aistudio.google.com/api-keys)
 
@@ -34,6 +34,7 @@ Your file has to be like:
 GOOGLE_API_KEY: your Key
 OPENAI_API_KEY: your Key
 ```
+> ⚠️ Use exactly *GOOGLE_API_KEY* and *OPENAI_API_KEY*
 
 ---
 

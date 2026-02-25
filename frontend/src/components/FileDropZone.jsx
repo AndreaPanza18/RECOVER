@@ -4,13 +4,30 @@ import './FileDropZone.css';
 export default function FileDropZone({ file, onFileUpload }) {
   const fileInputRef = useRef(null);
 
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.dataTransfer.files[0]) {
+      onFileUpload(e.dataTransfer.files[0]);
+    }
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   const triggerFileSelect = () => {
     if (fileInputRef.current) fileInputRef.current.click();
   };
 
   return (
-    <div className="file-input-zone">
-      <p>Trascina un file o usa il pulsante qui sotto</p>
+    <div
+      className="file-input-zone drop-active"
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+    >
+      <p>Trascina un file qui oppure usa il pulsante</p>
 
       <button className="fake-upload-btn" onClick={triggerFileSelect}>
         📁 Seleziona file

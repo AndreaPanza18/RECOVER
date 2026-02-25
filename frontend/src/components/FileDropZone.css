@@ -1,8 +1,12 @@
 .file-input-zone {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1rem;
+  border: 2px dashed var(--color-primary);
+  padding: 2rem;
+  border-radius: 1rem;
+  transition: background 0.2s ease;
+}
+
+.file-input-zone:hover {
+  background: rgba(108, 195, 213, 0.1);
 }
 
 .fake-upload-btn {
